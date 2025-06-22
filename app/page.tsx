@@ -1,103 +1,178 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Plus, MessageCircle, Sparkles, Bot } from "lucide-react"
+import { useRouter } from "next/navigation"
+
+interface Session {
+  session_id: string
+  session_name: string
+  created_at: string
+  message_count: number
+}
+
+export default function LandingPage() {
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [newSessionName, setNewSessionName] = useState("")
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    fetchSessions()
+  }, [])
+
+  const fetchSessions = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/sessions")
+      const data = await response.json()
+      setSessions(data.sessions)
+    } catch (error) {
+      console.error("Error fetching sessions:", error)
+    }
+  }
+
+  const createNewSession = async () => {
+    if (!newSessionName.trim()) return
+
+    setLoading(true)
+    try {
+      const response = await fetch("http://localhost:8000/create-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ session_name: newSessionName }),
+      })
+      const data = await response.json()
+      setIsCreateDialogOpen(false)
+      setNewSessionName("")
+      router.push(`/chat/${data.session_id}`)
+    } catch (error) {
+      console.error("Error creating session:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const openSession = (sessionId: string) => {
+    router.push(`/chat/${sessionId}`)
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="flex flex-col h-screen">
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4">
+          <div className="flex items-center justify-between max-w-6xl mx-auto">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-blue-600">ARIA Assistant</h1>
+                <p className="text-sm text-gray-600">Your friendly AI companion</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-green-600 font-medium">Online</span>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col items-center justify-center p-8">
+          <div className="text-center max-w-4xl w-full">
+            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <Sparkles className="w-8 h-8 text-white" />
+            </div>
+
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Hello! I'm ARIA 👋</h2>
+
+            <p className="text-lg text-gray-600 mb-8">
+              I'm here to chat, help with questions, analyze documents, and assist you with various tasks.
+            </p>
+
+            {/* Action Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Create New Session Card */}
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <Plus className="w-6 h-6 text-blue-500" />
+                  <h3 className="text-lg font-semibold text-gray-800">Start New Chat</h3>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  Create a new chat session to upload documents and start conversations
+                </p>
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-3 rounded-xl shadow-lg">
+                      Create New Session
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white border-gray-200">
+                    <DialogHeader>
+                      <DialogTitle className="text-gray-900">Create New Chat Session</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="session-name" className="text-gray-700 pb-5">
+                          Session Name
+                        </Label>
+                        <Input
+                          id="session-name"
+                          value={newSessionName}
+                          onChange={(e) => setNewSessionName(e.target.value)}
+                          placeholder="Enter session name..."
+                          className="bg-gray-50 border-gray-200 text-gray-900"
+                        />
+                      </div>
+                      <Button
+                        onClick={createNewSession}
+                        disabled={loading || !newSessionName.trim()}
+                        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                      >
+                        {loading ? "Creating..." : "Create Session"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* Previous Sessions Card */}
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <MessageCircle className="w-6 h-6 text-purple-500" />
+                  <h3 className="text-lg font-semibold text-gray-800">Previous Sessions</h3>
+                </div>
+                <p className="text-gray-600 mb-4">Continue your previous conversations</p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {sessions.length === 0 ? (
+                    <p className="text-gray-400 text-center py-4 text-sm">No previous sessions</p>
+                  ) : (
+                    sessions.map((session) => (
+                      <div
+                        key={session.session_id}
+                        onClick={() => openSession(session.session_id)}
+                        className="p-3 rounded-lg bg-white/60 hover:bg-white/80 cursor-pointer transition-all duration-200 border border-gray-100 hover:border-blue-200 hover:shadow-sm"
+                      >
+                        <h4 className="text-gray-900 font-medium text-sm truncate">{session.session_name}</h4>
+                        <p className="text-gray-500 text-xs">{session.message_count} messages</p>
+                        <p className="text-gray-400 text-xs">{new Date(session.created_at).toLocaleDateString()}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
